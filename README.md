@@ -31,7 +31,7 @@ TrendGetter는 3가지 부분으로 나뉩니다.
 ## 그래서 의도한 대로 성과가 나왔나요?
 
 1. **파이프라인 재시도 시간**
-    - **Without Airflow vs With Airflow **: 전자(약 ??분)을 후자(약 ??분)로 단축
+    - **Without Airflow vs With Airflow**: 전자(약 ??분)을 후자(약 ??분)로 단축
     - 로그확인 및 재시작 등 모든 과정이 자동화됨
 
 ## 프로젝트 구조

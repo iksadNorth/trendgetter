@@ -9,16 +9,18 @@ wheels/
 # Virtual environments
 .venv
 
-# Environment files
-.env
-.env.local
-.env.*
-!.env.example
-
 # Secrets and sensitive data
 *.key
 *.pem
 secrets/
+
+# Docker files
+Dockerfile
+deploy/
+
+# Git files
+.git/
+.gitignore
 
 # Custom files
 documents/

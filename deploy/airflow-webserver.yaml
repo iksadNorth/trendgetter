@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airflow-webserver
+  namespace: trendgetter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: airflow-webserver
+  template:
+    metadata:
+      labels:
+        app: airflow-webserver
+    spec:
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+      containers:
+      - name: webserver
+        image: iksadnorth/airflow:1.0.0
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8080
+        env:
+        - name: PYTHONPATH
+          valueFrom:
+            configMapKeyRef:
+              name: app-env
+              key: PYTHONPATH
+        - name: AIRFLOW_HOME
+          value: "/opt/airflow"
+        - name: AIRFLOW__CORE__EXECUTOR
+          value: "CeleryExecutor"
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: airflow-secret
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: airflow-secret
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: airflow-secret
+              key: POSTGRES_DB
+        - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+          value: "postgresql+psycopg2://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)"
+        - name: AIRFLOW__CELERY__BROKER_URL
+          value: "redis://redis:6379/0"
+        - name: AIRFLOW__CELERY__RESULT_BACKEND
+          value: "db+postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)"
+        command: ["airflow", "webserver"]
+        volumeMounts:
+        - name: dags
+          mountPath: /opt/airflow/dags
+        - name: src
+          mountPath: /opt/airflow/src
+        - name: logs
+          mountPath: /opt/airflow/logs
+        - name: plugins
+          mountPath: /opt/airflow/plugins
+      volumes:
+      - name: dags
+        persistentVolumeClaim:
+          claimName: airflow-dags
+      - name: src
+        persistentVolumeClaim:
+          claimName: airflow-src
+      - name: logs
+        persistentVolumeClaim:
+          claimName: airflow-logs
+      - name: plugins
+        persistentVolumeClaim:
+          claimName: airflow-plugins
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: airflow-webserver
+  namespace: trendgetter
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 8080
+    targetPort: 8080
+  selector:
+    app: airflow-webserver

@@ -1,0 +1,12 @@
+# ConfigMap은 .env 파일에서 생성하세요:
+# kubectl create configmap app-env --from-env-file=../.env -n trendgetter --dry-run=client -o yaml > configmap.yaml
+# 또는
+# kubectl create configmap app-env --from-env-file=../.env -n trendgetter
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-env
+  namespace: trendgetter
+data:
+  PYTHONPATH: "/opt/airflow"
