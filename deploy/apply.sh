@@ -8,6 +8,7 @@ kubectl create configmap app-env --from-env-file=.env -n trendgetter --dry-run=c
 kubectl create secret generic airflow-secret --from-env-file=.env -n trendgetter --dry-run=client -o yaml | kubectl apply -f -
 
 # 나머지 리소스 적용
+kubectl apply -f deploy/pv.yaml
 kubectl apply -f deploy/pvc.yaml
 kubectl apply -f deploy/redis.yaml
 kubectl apply -f deploy/postgres.yaml
