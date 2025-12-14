@@ -24,7 +24,10 @@ spec:
         - name: AIRFLOW_HOME
           value: "/opt/airflow"
         - name: PYTHONPATH
-          value: "/opt/airflow"
+          valueFrom:
+            configMapKeyRef:
+              name: app-env
+              key: PYTHONPATH
         - name: AIRFLOW__CORE__EXECUTOR
           value: "CeleryExecutor"
         - name: POSTGRES_USER
@@ -80,7 +83,7 @@ spec:
           value: "redis://redis:6379/0"
         - name: AIRFLOW__CELERY__RESULT_BACKEND
           value: "db+postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)"
-        command: ["airflow", "scheduler"]
+        command: ["python", "-m", "airflow", "scheduler"]
         volumeMounts:
         - name: dags
           mountPath: /opt/airflow/dags

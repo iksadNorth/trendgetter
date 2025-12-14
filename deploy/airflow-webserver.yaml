@@ -54,10 +54,12 @@ spec:
         - name: AIRFLOW__CELERY__RESULT_BACKEND
           value: "db+postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)"
         - name: AIRFLOW__WEBSERVER__WORKERS
-          value: "2"
+          value: "1"
         - name: AIRFLOW__WEBSERVER__WORKER_TIMEOUT
-          value: "120"
-        command: ["airflow", "webserver"]
+          value: "300"
+        - name: AIRFLOW__WEBSERVER__WEB_SERVER_MASTER_TIMEOUT
+          value: "300"
+        command: ["python", "-m", "airflow", "webserver"]
         volumeMounts:
         - name: dags
           mountPath: /opt/airflow/dags
