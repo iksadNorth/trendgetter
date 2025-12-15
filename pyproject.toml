@@ -4,7 +4,11 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "apache-airflow>=3.1.5",
+    "bs4>=0.0.2",
+    "pymongo>=4.15.5",
+]
 
 [build-system]
 requires = ["setuptools>=61.0"]
