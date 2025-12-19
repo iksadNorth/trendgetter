@@ -24,9 +24,15 @@ kubectl apply -f deploy/postgres.yaml
 echo "Postgres가 준비될 때까지 대기 중..."
 kubectl wait --for=condition=ready pod -l app=postgres -n trendgetter --timeout=300s
 
+# .env 파일 로드
+set -a
+source .env
+set +a
+
 # Airflow 리소스 적용 (initContainer가 자동으로 DB 초기화)
 kubectl apply -f deploy/airflow-scheduler.yaml
-kubectl apply -f deploy/airflow-webserver.yaml
+# airflow-webserver.yaml은 환경 변수 치환이 필요하므로 envsubst 사용
+envsubst < deploy/airflow-webserver.yaml | kubectl apply -f -
 kubectl apply -f deploy/airflow-worker.yaml
 
 # Airflow Webserver가 준비될 때까지 대기

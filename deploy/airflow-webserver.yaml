@@ -89,10 +89,14 @@ kind: Service
 metadata:
   name: airflow-webserver
   namespace: trendgetter
+  annotations:
+    metallb.universe.tf/allow-shared-ip: "true"
+    metallb.universe.tf/loadBalancerIPs: "${METALLB_IP}"
 spec:
   type: LoadBalancer
   ports:
   - port: 8080
     targetPort: 8080
+    protocol: TCP
   selector:
     app: airflow-webserver
