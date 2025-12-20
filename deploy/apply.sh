@@ -39,16 +39,4 @@ kubectl apply -f deploy/airflow-worker.yaml
 echo "Airflow Webserver가 준비될 때까지 대기 중..."
 kubectl wait --for=condition=ready pod -l app=airflow-webserver -n trendgetter --timeout=600s || echo "경고: Webserver가 아직 준비되지 않았습니다."
 
-# Airflow Webserver 접근 정보 출력
-echo ""
-echo "=========================================="
-echo "Airflow Webserver 접근 방법"
-echo "=========================================="
-echo "다음 명령어를 실행하세요:"
-echo "  kubectl port-forward -n trendgetter svc/airflow-webserver 8080:8080"
-echo "그 다음 브라우저에서 http://localhost:8080 접속"
-echo ""
-echo "또는 minikube tunnel을 사용 중이라면:"
-echo "  curl http://127.0.0.1:8080"
-echo "=========================================="
 

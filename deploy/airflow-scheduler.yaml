@@ -47,7 +47,25 @@ spec:
               key: POSTGRES_DB
         - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
           value: "postgresql+psycopg2://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)"
-        command: ["sh", "-c", "airflow db init || true"]
+        - name: AIRFLOW_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: airflow-secret
+              key: AIRFLOW_USERNAME
+        - name: AIRFLOW_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: airflow-secret
+              key: AIRFLOW_PASSWORD
+        - name: AIRFLOW_FIRSTNAME
+          value: "Admin"
+        - name: AIRFLOW_LASTNAME
+          value: "User"
+        - name: AIRFLOW_EMAIL
+          value: "admin@example.com"
+        - name: AIRFLOW_ROLE
+          value: "Admin"
+        command: ["sh", "-c", "airflow db init || true && echo 'Creating Airflow user...' && airflow users create --username \"${AIRFLOW_USERNAME}\" --password \"${AIRFLOW_PASSWORD}\" --firstname \"${AIRFLOW_FIRSTNAME}\" --lastname \"${AIRFLOW_LASTNAME}\" --role \"${AIRFLOW_ROLE}\" --email \"${AIRFLOW_EMAIL}\" 2>&1 || echo 'User creation completed (user may already exist)'"]
       containers:
       - name: scheduler
         image: iksadnorth/airflow:1.0.0
