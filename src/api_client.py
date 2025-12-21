@@ -1,5 +1,4 @@
 """FastAPI 서버 클라이언트 인터페이스"""
-from tkinter import NO
 import requests
 from typing import Optional, Dict, Any
 from abc import ABC
@@ -134,9 +133,9 @@ class BaseAPIClient(ABC):
         """PUT 요청"""
         return self._request('PUT', endpoint, json=json, **kwargs)
     
-    def delete(self, endpoint: str, **kwargs) -> requests.Response:
+    def delete(self, endpoint: str, json: Optional[Dict] = None, **kwargs) -> requests.Response:
         """DELETE 요청"""
-        return self._request('DELETE', endpoint, **kwargs)
+        return self._request('DELETE', endpoint, json=json, **kwargs)
 
 
 class PanAPIClient(BaseAPIClient):
@@ -203,7 +202,7 @@ class HermesAPIClient(BaseAPIClient):
             "variables": variables,
             "message": message,
         }
-        response = self.post(f'/api/v1/tfpjts/{project_id}', params=json_data)
+        response = self.post(f'/api/v1/tfpjts/{project_id}', json=json_data)
         return response.json()
     
     def destroy_terraform(
@@ -217,7 +216,7 @@ class HermesAPIClient(BaseAPIClient):
             "variables": variables,
             "message": message,
         }
-        response = self.delete(f'/api/v1/tfpjts/{project_id}', params=json_data)
+        response = self.delete(f'/api/v1/tfpjts/{project_id}', json=json_data)
         return response.json()
     
     # 필요에 따라 Hermes 서버의 다른 엔드포인트 메서드 추가
