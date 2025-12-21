@@ -8,6 +8,9 @@ spec:
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
+  claimRef:
+    name: postgres-data
+    namespace: trendgetter
   hostPath:
     path: /home/iksadnorth/project/trendgetter/postgres-data
 ---
@@ -21,6 +24,9 @@ spec:
   accessModes:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
+  claimRef:
+    name: airflow-dags
+    namespace: trendgetter
   hostPath:
     path: /home/iksadnorth/project/trendgetter/dags
 ---
@@ -34,6 +40,9 @@ spec:
   accessModes:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
+  claimRef:
+    name: airflow-src
+    namespace: trendgetter
   hostPath:
     path: /home/iksadnorth/project/trendgetter/src
 ---
@@ -47,6 +56,9 @@ spec:
   accessModes:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
+  claimRef:
+    name: airflow-logs
+    namespace: trendgetter
   hostPath:
     path: /home/iksadnorth/project/trendgetter/logs
 ---
@@ -60,6 +72,9 @@ spec:
   accessModes:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
+  claimRef:
+    name: airflow-plugins
+    namespace: trendgetter
   hostPath:
     path: /home/iksadnorth/project/trendgetter/plugins
 
