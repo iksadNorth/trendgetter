@@ -79,11 +79,18 @@ def trigger_single_detail_dag(**context):
         raise ValueError("article_id is required")
     
     from airflow.api.client.local_client import Client
+    from datetime import datetime, timezone
+    import time
     
     client = Client(None, None)
     
     try:
-        run_id = f'triggered__{article_id}__{context["ds_nodash"]}__{context["ts_nodash"]}'
+        # 각 article_id마다 고유한 run_id 생성 (중복 방지)
+        # 현재 시간의 마이크로초를 포함하여 고유성 보장
+        current_time = datetime.now(timezone.utc)
+        timestamp_micro = int(current_time.timestamp() * 1000000)  # 마이크로초 단위 타임스탬프
+        run_id = f'triggered__{article_id}__{timestamp_micro}'
+        
         client.trigger_dag(
             dag_id='community_article_detail',
             conf={'article_id': article_id},
@@ -92,6 +99,11 @@ def trigger_single_detail_dag(**context):
         print(f"Triggered detail DAG for article_id: {article_id} (run_id: {run_id})")
         return f"Successfully triggered for {article_id}"
     except Exception as e:
+        # 이미 존재하는 DAG run인 경우 무시 (멱등성 보장)
+        error_str = str(e).lower()
+        if "duplicate key" in error_str or "already exists" in error_str or "unique constraint" in error_str:
+            print(f"DAG run already exists for article_id: {article_id}, skipping...")
+            return f"DAG run already exists for {article_id}"
         print(f"Failed to trigger DAG for article_id {article_id}: {e}")
         import traceback
         traceback.print_exc()
