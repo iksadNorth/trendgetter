@@ -3,11 +3,16 @@ kind: Service
 metadata:
   name: mongodb
   namespace: trendgetter
+  annotations:
+    metallb.universe.tf/allow-shared-ip: "true"
+    metallb.universe.tf/loadBalancerIPs: "${MONGODB_IP}"
 spec:
+  type: LoadBalancer
   ports:
   - port: 27017
     targetPort: 27017
     name: mongodb
+    protocol: TCP
   selector:
     app: mongodb
 

@@ -13,13 +13,19 @@ kubectl apply -f deploy/namespace.yaml
 kubectl create configmap app-env --from-env-file=.env -n trendgetter --dry-run=client -o yaml | kubectl apply -f -
 kubectl create secret generic airflow-secret --from-env-file=.env -n trendgetter --dry-run=client -o yaml | kubectl apply -f -
 
+# .env 파일 로드 (환경 변수 치환이 필요한 리소스 적용 전에)
+set -a
+source .env
+set +a
+
 # PV/PVC 적용 (PV 먼저, 그 다음 PVC)
 kubectl apply -f deploy/pv.dev.yaml
 sleep 1
 kubectl apply -f deploy/pvc.yaml
 kubectl apply -f deploy/redis.yaml
 kubectl apply -f deploy/postgres.yaml
-kubectl apply -f deploy/mongodb.yaml
+# mongodb.yaml은 환경 변수 치환이 필요하므로 envsubst 사용
+envsubst < deploy/mongodb.yaml | kubectl apply -f -
 
 # Postgres가 준비될 때까지 대기
 echo "Postgres가 준비될 때까지 대기 중..."
@@ -28,11 +34,6 @@ kubectl wait --for=condition=ready pod -l app=postgres -n trendgetter --timeout=
 # MongoDB가 준비될 때까지 대기
 echo "MongoDB가 준비될 때까지 대기 중..."
 kubectl wait --for=condition=ready pod -l app=mongodb -n trendgetter --timeout=300s
-
-# .env 파일 로드
-set -a
-source .env
-set +a
 
 # Airflow 리소스 적용 (initContainer가 자동으로 DB 초기화)
 kubectl apply -f deploy/airflow-scheduler.yaml

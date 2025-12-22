@@ -2,7 +2,6 @@
 from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.utils.dates import days_ago
 from crawler import CommunityCrawler
 
@@ -52,9 +51,30 @@ extract_ids_task = PythonOperator(
     dag=community_list_dag,
 )
 
+# article_id 리스트를 딕셔너리 리스트로 변환하는 헬퍼 함수
+def prepare_article_ids_for_expand(**context):
+    """XCom에서 article_id 리스트를 가져와서 expand용 딕셔너리 리스트로 변환"""
+    ti = context['ti']
+    article_ids = ti.xcom_pull(task_ids='extract_article_ids')
+    
+    if not article_ids:
+        return []
+    
+    # 각 article_id를 딕셔너리로 변환
+    return [{'article_id': article_id} for article_id in article_ids]
+
+# article_id 리스트를 딕셔너리 리스트로 변환하는 태스크
+prepare_ids_task = PythonOperator(
+    task_id='prepare_article_ids',
+    python_callable=prepare_article_ids_for_expand,
+    dag=community_list_dag,
+)
+
 # 단일 article_id에 대해 상세 DAG 트리거 (Dynamic Task Mapping용)
-def trigger_single_detail_dag(article_id: str, **context):
+def trigger_single_detail_dag(**context):
     """단일 article_id에 대해 상세 DAG 트리거"""
+    # context에서 article_id 가져오기 (op_kwargs로 전달됨)
+    article_id = context.get('article_id')
     if not article_id:
         raise ValueError("article_id is required")
     
@@ -78,17 +98,18 @@ def trigger_single_detail_dag(article_id: str, **context):
         raise  # 예외를 다시 발생시켜 태스크 실패로 표시
 
 # Dynamic Task Mapping: 각 article_id마다 독립적인 태스크 생성
+# expand()에 딕셔너리 리스트를 전달하면 각 딕셔너리가 op_kwargs로 전달됨
 trigger_tasks = PythonOperator.partial(
     task_id='trigger_detail_dag',
     python_callable=trigger_single_detail_dag,
     dag=community_list_dag,
 ).expand(
-    # article_id 리스트를 개별 요소로 expand
-    article_id=extract_ids_task.output
+    # 딕셔너리 리스트의 각 딕셔너리가 op_kwargs로 전달됨
+    op_kwargs=prepare_ids_task.output
 )
 
 # 의존성 설정
-extract_ids_task >> trigger_tasks
+extract_ids_task >> prepare_ids_task >> trigger_tasks
 
 
 # ============================================================================
@@ -119,20 +140,18 @@ def extract_and_save_article_detail(**context):
         print(f"No data found for article_id: {article_id}")
         return
     
-    # article_id 추가
-    article_data['article_id'] = article_id
-    article_data['crawled_at'] = datetime.now().isoformat()
-    
-    # MongoDB 저장
+    # MongoDB 저장 (src_pk + seq 복합 키 기준으로 upsert - 멱등성 보장)
     from mongodb import MongoDBClient
     
     mongo_client = MongoDBClient()
     try:
-        result = mongo_client.save_article(
-            article_data=article_data,
-            collection_name='community_articles'
+        result = mongo_client.upsert_many(
+            collection_name='community_articles',
+            documents=article_data,
+            filter_keys=['src_pk', 'seq']
         )
-        print(f"Saved article {article_id} to MongoDB: {result}")
+        print(f"Upserted {len(article_data)} documents for article {article_id}")
+        print(f"Matched: {result['matched_count']}, Modified: {result['modified_count']}, Upserted: {result['upserted_count']}")
     finally:
         mongo_client.close()
     
