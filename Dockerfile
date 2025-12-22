@@ -7,10 +7,8 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 COPY pyproject.toml ./
 COPY src/ ./src/
 
-# 의존성 설치 (의존성이 있으면 설치)
-RUN if grep -q "dependencies" pyproject.toml && ! grep -q "dependencies = \[\]" pyproject.toml; then \
-        uv pip install --system --no-cache --break-system-packages $(grep -A 1000 '^dependencies' pyproject.toml | grep -E '^\s*"[^"]+"' | sed 's/.*"\(.*\)".*/\1/' | tr '\n' ' ') || true; \
-    fi && \
+# 의존성 설치 (pyproject.toml에서 자동으로 읽어서 설치)
+RUN uv pip install --system --no-cache --break-system-packages . && \
     rm -rf /tmp/* /var/tmp/* && \
     find /root -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true && \
     find /root -type f -name "*.pyc" -delete 2>/dev/null || true

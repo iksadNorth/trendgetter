@@ -19,10 +19,15 @@ sleep 1
 kubectl apply -f deploy/pvc.yaml
 kubectl apply -f deploy/redis.yaml
 kubectl apply -f deploy/postgres.yaml
+kubectl apply -f deploy/mongodb.yaml
 
 # Postgres가 준비될 때까지 대기
 echo "Postgres가 준비될 때까지 대기 중..."
 kubectl wait --for=condition=ready pod -l app=postgres -n trendgetter --timeout=300s
+
+# MongoDB가 준비될 때까지 대기
+echo "MongoDB가 준비될 때까지 대기 중..."
+kubectl wait --for=condition=ready pod -l app=mongodb -n trendgetter --timeout=300s
 
 # .env 파일 로드
 set -a

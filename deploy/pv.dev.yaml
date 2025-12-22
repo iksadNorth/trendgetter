@@ -78,3 +78,20 @@ spec:
   hostPath:
     path: /home/iksadnorth/project/trendgetter/plugins
 
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongodb-data-pv
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  claimRef:
+    name: mongodb-data
+    namespace: trendgetter
+  hostPath:
+    path: /home/iksadnorth/project/trendgetter/mongodb-data
+

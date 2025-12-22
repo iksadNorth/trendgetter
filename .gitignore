@@ -21,6 +21,8 @@ wheels/
 secrets/
 
 # Custom files
+mongodb-data/
+postgres-data/
 documents/
 *.log
 logs/
