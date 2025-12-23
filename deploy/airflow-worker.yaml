@@ -51,7 +51,7 @@ spec:
           value: "redis://redis:6379/0"
         - name: AIRFLOW__CELERY__RESULT_BACKEND
           value: "db+postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)"
-        command: ["python", "-m", "airflow", "celery", "worker"]
+        command: ["uv", "run", "python", "-m", "airflow", "celery", "worker"]
         volumeMounts:
         - name: dags
           mountPath: /opt/airflow/dags

@@ -59,7 +59,7 @@ spec:
           value: "300"
         - name: AIRFLOW__WEBSERVER__WEB_SERVER_MASTER_TIMEOUT
           value: "300"
-        command: ["python", "-m", "airflow", "webserver"]
+        command: ["uv", "run", "python", "-m", "airflow", "webserver"]
         volumeMounts:
         - name: dags
           mountPath: /opt/airflow/dags
