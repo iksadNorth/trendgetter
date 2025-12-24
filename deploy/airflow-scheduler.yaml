@@ -47,6 +47,11 @@ spec:
               key: POSTGRES_DB
         - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
           value: "postgresql+psycopg2://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)"
+        - name: AIRFLOW__CORE__FERNET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: airflow-secret
+              key: FERNET_KEY
         - name: AIRFLOW_USERNAME
           valueFrom:
             secretKeyRef:
@@ -101,6 +106,11 @@ spec:
           value: "redis://redis:6379/0"
         - name: AIRFLOW__CELERY__RESULT_BACKEND
           value: "db+postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)"
+        - name: AIRFLOW__CORE__FERNET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: airflow-secret
+              key: FERNET_KEY
         command: ["uv", "run", "python", "-m", "airflow", "scheduler"]
         volumeMounts:
         - name: dags
