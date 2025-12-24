@@ -9,4 +9,4 @@ metadata:
   name: app-env
   namespace: trendgetter
 data:
-  PYTHONPATH: "/opt/airflow:/opt/airflow/src:/opt/airflow/.venv/lib/python3.11/site-packages"
+  PYTHONPATH: "/opt/airflow:/opt/airflow/src:/home/airflow/.local/lib/python3.11/site-packages"
