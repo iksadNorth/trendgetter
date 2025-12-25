@@ -37,7 +37,7 @@ class MongoDBClient:
             return {'matched_count': 0, 'modified_count': 0, 'upserted_count': 0}
         
         if filter_keys is None:
-            filter_keys = ['src_pk', 'seq']
+            filter_keys = []
         
         collection = self.hook.get_collection(collection_name, mongo_db=database_name)
         
