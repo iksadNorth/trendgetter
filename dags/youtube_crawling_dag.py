@@ -75,7 +75,7 @@ def extract_and_save_article_detail(**context):
     
     # MongoDB 저장
     mongo_client.upsert_many(
-        collection_name='youtube_articles',
+        collection_name='raw_articles',
         documents=article_data,
         filter_keys=['src_pk', 'src_id', 'comment_id']
     )
