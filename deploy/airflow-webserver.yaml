@@ -58,6 +58,8 @@ spec:
             secretKeyRef:
               name: airflow-secret
               key: FERNET_KEY
+        - name: AIRFLOW__CORE__LOAD_EXAMPLES
+          value: "False"
         - name: AIRFLOW__WEBSERVER__WORKERS
           value: "1"
         - name: AIRFLOW__WEBSERVER__WORKER_TIMEOUT

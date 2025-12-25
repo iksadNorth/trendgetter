@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version >= '3.14'",
@@ -203,6 +203,21 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ad/52/376775f0f56fb46fea62d7894218805e0dc6ef12d3858e1d7971f615e81f/apache_airflow_providers_common_sql-1.30.1.tar.gz", hash = "sha256:4d0167387754bcdab2bd875646176f190cf69bb0644dca0f230c6007a6259ed2", size = 105843, upload-time = "2025-12-13T15:08:28.477Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3a/55/ccafcba5f5600483378b358e264b88512b1e30da6bc4042bd068db3de45d/apache_airflow_providers_common_sql-1.30.1-py3-none-any.whl", hash = "sha256:9010c65159223cef8e44feb640ce532a0584b277074d8566523ad49de938ddd1", size = 67522, upload-time = "2025-12-13T15:07:18.138Z" },
+]
+
+[[package]]
+name = "apache-airflow-providers-mongo"
+version = "5.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "apache-airflow" },
+    { name = "apache-airflow-providers-common-compat" },
+    { name = "dnspython" },
+    { name = "pymongo" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/41/7c/1b5105daa907b1a4d1eeb8d8f9454e4a8e5844401e341fcaeb2525438ab3/apache_airflow_providers_mongo-5.3.0.tar.gz", hash = "sha256:4cc186350c950d277bc955c7a9f22fc6424a77dfd14c6ae6a2f71c7d360030a8", size = 33294, upload-time = "2025-11-30T22:18:32.951Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/41/fc/95a0acc137ff288601eca8e5252cfc8f6d43b324067eb99908fb7ccfd238/apache_airflow_providers_mongo-5.3.0-py3-none-any.whl", hash = "sha256:d61ca694a0d09cb5612cd09dd7a5f6d31a9a8cecd21d2156220b625480f779b2", size = 18128, upload-time = "2025-11-30T22:17:03.664Z" },
 ]
 
 [[package]]
@@ -2559,14 +2574,14 @@ name = "trendgetter"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "apache-airflow" },
+    { name = "apache-airflow-providers-mongo" },
     { name = "bs4" },
     { name = "pymongo" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "apache-airflow", specifier = ">=3.1.5" },
+    { name = "apache-airflow-providers-mongo", specifier = ">=5.3.0" },
     { name = "bs4", specifier = ">=0.0.2" },
     { name = "pymongo", specifier = ">=4.15.5" },
 ]

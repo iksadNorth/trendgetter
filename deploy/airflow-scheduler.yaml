@@ -111,6 +111,8 @@ spec:
             secretKeyRef:
               name: airflow-secret
               key: FERNET_KEY
+        - name: AIRFLOW__CORE__LOAD_EXAMPLES
+          value: "False"
         command: ["uv", "run", "python", "-m", "airflow", "scheduler"]
         volumeMounts:
         - name: dags

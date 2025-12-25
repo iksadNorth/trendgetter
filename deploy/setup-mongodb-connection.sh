@@ -41,17 +41,19 @@ kubectl wait --for=condition=ready pod -n "$NAMESPACE" "$POD" --timeout=300s || 
     echo "경고: Pod가 Ready 상태가 되지 않았습니다."
 }
 
-# Python 스크립트 실행 (src 디렉토리가 마운트되어 있으므로 직접 실행 가능)
+# MongoDB Connection 설정 (mongo 타입으로 생성)
 echo "MongoDB Connection 설정 중..."
 kubectl exec -n "$NAMESPACE" "$POD" -c scheduler -- \
   sh -c "cd /opt/airflow && \
-    CONN_ID='$CONN_ID' \
-    MONGODB_HOST='mongodb' \
-    MONGODB_PORT='27017' \
-    MONGODB_USERNAME='$MONGODB_USERNAME' \
-    MONGODB_PASSWORD='$MONGODB_PASSWORD' \
-    MONGODB_DATABASE='$MONGODB_DATABASE' \
-    uv run python src/setup_mongodb_connection.py" || {
+    uv run airflow connections delete $CONN_ID 2>/dev/null || true && \
+    uv run airflow connections add $CONN_ID \
+      --conn-type mongo \
+      --conn-host mongodb \
+      --conn-port 27017 \
+      --conn-login '$MONGODB_USERNAME' \
+      --conn-password '$MONGODB_PASSWORD' \
+      --conn-schema '$MONGODB_DATABASE' \
+      --conn-extra '{\"authSource\": \"admin\"}'" || {
     echo "오류: Connection 설정에 실패했습니다."
     exit 1
 }

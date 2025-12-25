@@ -5,7 +5,12 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "apache-airflow==2.11.0",
+    "apache-airflow-providers-celery>=3.3.0",
+    "apache-airflow-providers-common-compat>=1.10.1",
+    "apache-airflow-providers-mongo>=5.3.0",
     "bs4>=0.0.2",
+    "psycopg2-binary>=2.9.0",
     "pymongo>=4.15.5",
 ]
 
