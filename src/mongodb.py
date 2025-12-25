@@ -64,8 +64,3 @@ class MongoDBClient:
             'upserted_count': result.upserted_count,
             'upserted_ids': result.upserted_ids
         }
-    
-    def close(self):
-        """연결 종료 (MongoHook이 자동 관리하므로 빈 메서드)"""
-        pass
-
