@@ -77,7 +77,7 @@ def extract_and_save_article_detail(**context):
     mongo_client.upsert_many(
         collection_name='youtube_articles',
         documents=article_data,
-        filter_keys=['src_pk', 'seq']
+        filter_keys=['src_pk', 'src_id', 'comment_id']
     )
     
     return article_data
@@ -147,7 +147,6 @@ extract_detail_task = PythonOperator(
 
 # 의존성 설정
 #   목록 추출 >> 상세 DAG 트리거
-extract_ids_task >> trigger_tasks
+extract_ids_task >> trigger_tasks  # pyright: ignore[reportUnusedExpression]
 #   상세 크롤링 >> 저장
-extract_detail_task
-
+extract_detail_task  # pyright: ignore[reportUnusedExpression]
