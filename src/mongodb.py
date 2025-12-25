@@ -32,7 +32,7 @@ class MongoDBClient:
         
         # MongoDB URI 구성
         if login and password:
-            uri = f"mongodb://{login}:{password}@{host}:{port}/{schema}"
+            uri = f"mongodb://{login}:{password}@{host}:{port}/{schema}?authSource=admin"
         else:
             uri = f"mongodb://{host}:{port}/{schema}"
         
