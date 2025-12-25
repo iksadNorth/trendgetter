@@ -146,7 +146,7 @@ extract_detail_task = PythonOperator(
 
 
 # 의존성 설정
-#   목록 추출 >> 상세 크롤링
+#   목록 추출 >> 상세 DAG 트리거
 extract_ids_task >> trigger_tasks
-#    저장
+#   상세 크롤링 >> 저장
 extract_detail_task
