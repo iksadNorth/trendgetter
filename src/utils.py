@@ -1,6 +1,6 @@
 # 타임스탬프 마이크로 단위 반환 함수
 from datetime import datetime, timezone, timedelta
-from typing import Optional
+from typing import Optional, List, Dict, Any, Set
 
 def get_timestamp_micro() -> int:
     current_time = datetime.now(timezone.utc)
@@ -86,3 +86,33 @@ def get_week_range(execution_date: datetime) -> tuple[datetime, datetime]:
     )
     
     return start_time, end_time
+
+def get_week_bucket_start(dt: datetime) -> datetime:
+    """해당 datetime이 속한 주의 월요일 00:00:00 반환 (시간 버킷 시작점)
+    
+    Args:
+        dt: 기준 datetime 객체
+        
+    Returns:
+        해당 주의 월요일 00:00:00
+    """
+    dt = normalize_datetime(dt)
+    days_to_monday = dt.weekday()
+    return (dt - timedelta(days=days_to_monday)).replace(hour=0, minute=0, second=0, microsecond=0)
+
+def get_all_week_buckets(tokens: List[Dict[str, Any]]) -> Set[datetime]:
+    """토큰 리스트에서 고유한 시간 버킷 시작점 집합 반환
+    
+    Args:
+        tokens: 토큰 문서 리스트 (각 문서는 'created_at' 필드 포함)
+        
+    Returns:
+        고유한 시간 버킷 시작점의 집합
+    """
+    buckets = set()
+    for token in tokens:
+        created_at = token.get('created_at')
+        if created_at:
+            bucket_start = get_week_bucket_start(created_at)
+            buckets.add(bucket_start)
+    return buckets
