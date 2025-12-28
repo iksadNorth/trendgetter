@@ -6,13 +6,13 @@ from airflow.operators.python import PythonOperator
 from airflow.utils.dates import days_ago
 
 from mongodb import MongoDBClient
-from quality_assurance import SimpleQualityAssurance
+from quality_assurance import KiwiTokenizerQualityAssurance
 from utils import get_week_range, normalize_datetime
 
 
 # 파라미터 초기화
 mongo_client = MongoDBClient()
-qa = SimpleQualityAssurance()
+qa = KiwiTokenizerQualityAssurance()
 
 
 # 로직 함수 정의

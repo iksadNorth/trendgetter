@@ -15,6 +15,7 @@ dependencies = [
     "bs4>=0.0.2",
     "psycopg2-binary>=2.9.0",
     "pymongo>=4.15.5",
+    "kiwipiepy>=0.20.0",
 ]
 
 [build-system]
