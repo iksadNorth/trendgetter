@@ -6,12 +6,14 @@ from airflow.utils.dates import days_ago
 
 from mongodb import MongoDBClient
 from src.statistics import TimeWindowedTemporalTFIDF
+from src.postgresql import PostgreSQLClient
 from utils import get_week_range, normalize_datetime, get_week_bucket_start
 
 
 # 파라미터 초기화
 mongo_client = MongoDBClient()
 tfidf_calculator = TimeWindowedTemporalTFIDF(mongo_client=mongo_client)
+postgres_client = PostgreSQLClient(conn_id='superset_postgres_default')
 
 
 # 로직 함수 정의
@@ -77,10 +79,10 @@ def calculate_tfidf_scores(**context):
     # 해당 주의 월요일부터 execution_date까지의 범위 계산
     start_time, end_time = get_week_range(execution_date)
     
-    # TF-IDF 스코어 계산
-    tfidf_scores = tfidf_calculator.calculate(start_date=start_time, end_date=end_time)
+    # TF-IDF 스코어 계산 (TFIDFScore 모델 리스트 반환)
+    tfidf_score_models = tfidf_calculator.calculate(start_date=start_time, end_date=end_time)
     
-    if not tfidf_scores:
+    if not tfidf_score_models:
         return {'score_count': 0}
     
     # 기존 스코어 삭제 (멱등성 보장)
@@ -92,14 +94,56 @@ def calculate_tfidf_scores(**context):
         }
     )
     
-    # 새 스코어 insert
+    # 새 스코어 insert (모델을 딕셔너리로 변환)
+    tfidf_scores_dict = [model.to_dict() for model in tfidf_score_models]
     mongo_client.insert_many(
         collection_name='tfidf_scores',
-        documents=tfidf_scores
+        documents=tfidf_scores_dict
     )
     
     return {
-        'score_count': len(tfidf_scores),
+        'score_count': len(tfidf_score_models),
+        'start_time': start_time.isoformat(),
+        'end_time': end_time.isoformat()
+    }
+
+
+def migrate_tfidf_to_postgres(**context):
+    """MongoDB의 tfidf_scores 데이터를 PostgreSQL로 마이그레이션"""
+    # 파라미터 추출 및 정규화
+    execution_date = context.get('execution_date')
+    if not execution_date:
+        execution_date = datetime.now()
+    else:
+        execution_date = normalize_datetime(execution_date)
+    
+    # 해당 주의 월요일부터 execution_date까지의 범위 계산
+    start_time, end_time = get_week_range(execution_date)
+    
+    # MongoDB에서 tfidf_scores 조회
+    tfidf_scores = mongo_client.find_by_time_range(
+        collection_name='tfidf_scores',
+        time_field='start_time',
+        start_time=start_time,
+        end_time=end_time
+    )
+    
+    if not tfidf_scores:
+        return {
+            'migrated_count': 0,
+            'start_time': start_time.isoformat(),
+            'end_time': end_time.isoformat()
+        }
+    
+    # PostgreSQL에 저장 (멱등성 보장: start_time, end_time 기준으로 삭제 후 삽입)
+    result = postgres_client.upsert_tfidf_scores(
+        scores=tfidf_scores,
+        table_name='tfidf_scores'
+    )
+    
+    return {
+        'migrated_count': result['inserted_count'],
+        'deleted_count': result['deleted_count'],
         'start_time': start_time.isoformat(),
         'end_time': end_time.isoformat()
     }
@@ -139,8 +183,14 @@ calculate_tfidf_task = PythonOperator(
     dag=tfidf_dag,
 )
 
+migrate_tfidf_task = PythonOperator(
+    task_id='migrate_tfidf_to_postgres',
+    python_callable=migrate_tfidf_to_postgres,
+    dag=tfidf_dag,
+)
+
 
 # 의존성 설정
-aggregate_daily_task >> calculate_tfidf_task  # pyright: ignore[reportUnusedExpression]
+aggregate_daily_task >> calculate_tfidf_task >> migrate_tfidf_task  # pyright: ignore[reportUnusedExpression]
 
 

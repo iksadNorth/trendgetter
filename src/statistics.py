@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional
 import math
 from mongodb import MongoDBClient
+from src.model import TFIDFScore
 
 
 class TimeWindowedTemporalTFIDF():
@@ -14,7 +15,7 @@ class TimeWindowedTemporalTFIDF():
         """
         self.mongo_client = mongo_client or MongoDBClient()
     
-    def calculate(self, start_date: datetime, end_date: datetime) -> List[Dict[str, Any]]:
+    def calculate(self, start_date: datetime, end_date: datetime) -> List[TFIDFScore]:
         """시간 버킷(1주일) 단위로 TF-IDF 스코어 계산 (count_keyword 컬렉션 기반)
         
         Args:
@@ -22,7 +23,7 @@ class TimeWindowedTemporalTFIDF():
             end_date: 종료 시간 (시간 버킷 종료점)
         
         Returns:
-            토큰별 TF-IDF 스코어 리스트
+            토큰별 TF-IDF 스코어 모델 리스트 (TFIDFScore)
         """
         # 1. 주간 범위의 토큰 카운트 집계 (TF 계산용)
         weekly_token_counts = self.mongo_client.aggregate_weekly_token_counts(
@@ -63,7 +64,8 @@ class TimeWindowedTemporalTFIDF():
             # TF-IDF 계산
             tfidf_score = tf * idf
             
-            tfidf_scores.append({
+            # 딕셔너리 생성 후 TFIDFScore 모델로 변환
+            score_dict = {
                 'token': token,
                 'score': tfidf_score,
                 'tf': tf,
@@ -72,7 +74,8 @@ class TimeWindowedTemporalTFIDF():
                 'end_time': end_date,
                 'bucket_count': bucket_count_with_token,
                 'total_bucket_count': total_bucket_count
-            })
+            }
+            tfidf_scores.append(TFIDFScore.from_dict(score_dict))
         
         return tfidf_scores
     
