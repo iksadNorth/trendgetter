@@ -94,4 +94,20 @@ spec:
     namespace: trendgetter
   hostPath:
     path: /home/iksadnorth/project/trendgetter/mongodb-data
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: superset-config-pv
+spec:
+  capacity:
+    storage: 100Mi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  claimRef:
+    name: superset-config
+    namespace: trendgetter
+  hostPath:
+    path: /home/iksadnorth/project/trendgetter/superset_config
 

@@ -23,6 +23,7 @@ secrets/
 # Custom files
 mongodb-data/
 postgres-data/
+superset-data/
 documents/
 *.log
 logs/

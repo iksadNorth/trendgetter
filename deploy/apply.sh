@@ -23,7 +23,8 @@ kubectl apply -f deploy/pv.dev.yaml
 sleep 1
 kubectl apply -f deploy/pvc.yaml
 kubectl apply -f deploy/redis.yaml
-kubectl apply -f deploy/postgres.yaml
+# postgres.yaml은 환경 변수 치환이 필요하므로 envsubst 사용
+envsubst < deploy/postgres.yaml | kubectl apply -f -
 # mongodb.yaml은 환경 변수 치환이 필요하므로 envsubst 사용
 envsubst < deploy/mongodb.yaml | kubectl apply -f -
 
@@ -44,5 +45,17 @@ kubectl apply -f deploy/airflow-worker.yaml
 # Airflow Webserver가 준비될 때까지 대기
 echo "Airflow Webserver가 준비될 때까지 대기 중..."
 kubectl wait --for=condition=ready pod -l app=airflow-webserver -n trendgetter --timeout=600s || echo "경고: Webserver가 아직 준비되지 않았습니다."
+
+# Superset 데이터베이스 생성
+echo "Superset 데이터베이스 생성 중..."
+bash deploy/setup-superset-db.sh || echo "경고: Superset 데이터베이스 생성 중 오류 발생 (무시됨)"
+
+# Superset 리소스 적용
+echo "Superset 배포 중..."
+envsubst < deploy/superset.yaml | kubectl apply -f -
+
+# Superset이 준비될 때까지 대기
+echo "Superset이 준비될 때까지 대기 중..."
+kubectl wait --for=condition=ready pod -l app=superset -n trendgetter --timeout=600s || echo "경고: Superset이 아직 준비되지 않았습니다."
 
 

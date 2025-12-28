@@ -1,0 +1,88 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: superset-secret
+  namespace: trendgetter
+type: Opaque
+stringData:
+  SUPERSET_SECRET_KEY: "${SUPERSET_SECRET_KEY}"
+  SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres.trendgetter.svc.cluster.local:5432/superset
+  SUPERSET_USERNAME: "${SUPERSET_USERNAME}"
+  SUPERSET_PASSWORD: "${SUPERSET_PASSWORD}"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: superset
+  namespace: trendgetter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: superset
+  template:
+    metadata:
+      labels:
+        app: superset
+    spec:
+      containers:
+      - name: superset
+        image: superset:3.1.1-pg
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8088
+        env:
+        - name: SUPERSET_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: superset-secret
+              key: SUPERSET_SECRET_KEY
+        - name: SQLALCHEMY_DATABASE_URI
+          valueFrom:
+            secretKeyRef:
+              name: superset-secret
+              key: SQLALCHEMY_DATABASE_URI
+        - name: SUPERSET_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: superset-secret
+              key: SUPERSET_USERNAME
+        - name: SUPERSET_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: superset-secret
+              key: SUPERSET_PASSWORD
+        - name: PYTHONPATH
+          value: "/app/pythonpath:/usr/local/lib/python3.9/site-packages:/app"
+        volumeMounts:
+        - name: superset-config
+          mountPath: /app/pythonpath
+        command:
+        - /bin/bash
+        - -c
+        - |
+          superset db upgrade
+          superset fab create-admin --username "$SUPERSET_USERNAME" --firstname admin --lastname admin --email admin@admin.com --password "$SUPERSET_PASSWORD" || true
+          superset init
+          superset run -h 0.0.0.0 -p 8088
+      volumes:
+      - name: superset-config
+        persistentVolumeClaim:
+          claimName: superset-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: superset
+  namespace: trendgetter
+  annotations:
+    metallb.universe.tf/allow-shared-ip: "true"
+    metallb.universe.tf/loadBalancerIPs: "${SUPERSET_IP}"
+spec:
+  type: LoadBalancer
+  selector:
+    app: superset
+  ports:
+  - port: 8088
+    targetPort: 8088
+    protocol: TCP
