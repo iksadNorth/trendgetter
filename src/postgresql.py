@@ -60,7 +60,7 @@ class PostgreSQLClient:
         session = self._get_session()
         try:
             # 1. 기존 데이터 삭제 (멱등성 보장) - ORM 방식
-            deleted_count: int = session.query(TFIDFScore).filter(
+            deleted_count: int = session.query(TFIDFScore).filter(  # pyright: ignore[reportOptionalCall]
                 TFIDFScore.start_time == start_time,
             ).delete(synchronize_session=False)
             
