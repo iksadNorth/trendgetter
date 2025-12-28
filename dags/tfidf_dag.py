@@ -90,7 +90,6 @@ def calculate_tfidf_scores(**context):
         collection_name='tfidf_scores',
         filter_dict={
             'start_time': start_time,
-            'end_time': end_time
         }
     )
     

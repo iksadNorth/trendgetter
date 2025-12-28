@@ -62,7 +62,6 @@ class PostgreSQLClient:
             # 1. 기존 데이터 삭제 (멱등성 보장) - ORM 방식
             deleted_count: int = session.query(TFIDFScore).filter(
                 TFIDFScore.start_time == start_time,
-                TFIDFScore.end_time == end_time,
             ).delete(synchronize_session=False)
             
             # 2. 새 데이터 삽입 - ORM 방식
