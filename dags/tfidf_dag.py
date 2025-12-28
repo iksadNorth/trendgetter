@@ -119,7 +119,7 @@ tfidf_dag = DAG(
     'token_aggregation',
     default_args=default_args,
     description='일일 토큰 집계 및 주간 TF-IDF 스코어 계산',
-    schedule_interval=timedelta(days=7),
+    schedule_interval=timedelta(days=1),
     start_date=days_ago(7),
     catchup=True,
     tags=['trendgetter', 'token', 'aggregation', 'tfidf', 'statistics', 'nlp'],
@@ -141,6 +141,6 @@ calculate_tfidf_task = PythonOperator(
 
 
 # 의존성 설정
-aggregate_daily_task >> calculate_tfidf_task
+aggregate_daily_task >> calculate_tfidf_task  # pyright: ignore[reportUnusedExpression]
 
 
