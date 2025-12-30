@@ -133,58 +133,6 @@ class YoutubeCrawler():
         return raw_data
 
 
-if __name__ == '__main__':
-    from datetime import datetime
-    
-    print("=" * 60)
-    print("YoutubeCrawler 테스트")
-    print("=" * 60)
-    
-    try:
-        # YoutubeCrawler 인스턴스 생성
-        print("\n[1] YoutubeCrawler 초기화 중...")
-        crawler = YoutubeCrawler()
-        print("✅ 초기화 완료")
-        
-        # Trending 영상 ID 가져오기
-        print("\n[2] 한국 인기 동영상 상위 10개 가져오기...")
-        video_ids = crawler.scrap_array_id(created_at=datetime.now())
-        print(f"✅ {len(video_ids)}개 영상 ID 수집 완료")
-        print(f"   영상 ID 목록: {video_ids[:5]}..." if len(video_ids) > 5 else f"   영상 ID 목록: {video_ids}")
-        
-        if not video_ids:
-            print("⚠️  영상 ID를 가져올 수 없습니다. API 키를 확인하세요.")
-            exit(1)
-        
-        # 첫 번째 영상의 댓글 가져오기
-        print(f"\n[3] 첫 번째 영상 (ID: {video_ids[0]})의 댓글 가져오기...")
-        comments = crawler.scrap_article_data(article_id=video_ids[0])
-        print(f"✅ {len(comments)}개 댓글 수집 완료")
-        
-        if comments:
-            print("\n[4] 수집된 댓글 샘플 (최대 3개):")
-            for i, comment in enumerate(comments[:3], 1):
-                print(f"\n   댓글 {i}:")
-                print(f"   - comment_id: {comment.get('comment_id')}")
-                print(f"   - text: {comment.get('text', '')[:50]}..." if len(comment.get('text', '')) > 50 else f"   - text: {comment.get('text', '')}")
-                print(f"   - created_at: {comment.get('created_at')}")
-                print(f"   - created_by: {comment.get('created_by')}")
-        else:
-            print("⚠️  댓글을 가져올 수 없습니다.")
-        
-        print("\n" + "=" * 60)
-        print("테스트 완료!")
-        print("=" * 60)
-        
-    except ValueError as e:
-        print(f"\n❌ 오류: {e}")
-        print("   YOUTUBE_API_KEY 환경 변수를 설정하세요.")
-    except Exception as e:
-        print(f"\n❌ 예상치 못한 오류: {e}")
-        import traceback
-        traceback.print_exc()
-
-
 class InstagramCrawler():
     def scrap_array_id(self, created_at: datetime):
         return []
