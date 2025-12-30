@@ -21,13 +21,13 @@ class YoutubeCrawler():
         self.youtube = build('youtube', 'v3', developerKey=self.api_key)
     
     def scrap_array_id(self, created_at: datetime) -> List[str]:
-        """한국 인기 동영상 상위 10개 영상 ID 가져오기
+        """한국 인기 동영상 상위 1000개 영상 ID 가져오기
         
         Args:
             created_at: 실행 시간 (현재는 사용하지 않지만 인터페이스 호환성을 위해 유지)
             
         Returns:
-            영상 ID 리스트 (최대 10개)
+            영상 ID 리스트 (최대 1000개)
         """
         try:
             # 한국 인기 동영상 가져오기
@@ -35,12 +35,11 @@ class YoutubeCrawler():
                 part='id',
                 chart='mostPopular',
                 regionCode='KR',
-                maxResults=10
+                maxResults=1000
             )
             response = request.execute()
             
-            video_ids = [item['id'] for item in response.get('items', [])]
-            return video_ids[:10]  # 최대 10개만 반환
+            return[item['id'] for item in response.get('items', [])]
             
         except Exception as e:
             print(f"trending videos 오류: {e}")

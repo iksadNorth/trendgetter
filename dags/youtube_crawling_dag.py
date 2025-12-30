@@ -1,125 +1,110 @@
-from datetime import datetime, timedelta, timezone
-import traceback
+from datetime import timedelta
 
 from airflow import DAG
+from airflow.models import Variable
 from airflow.operators.python import PythonOperator
 from airflow.utils.dates import days_ago
-from airflow.api.client.local_client import Client
 
 from crawler import YoutubeCrawler
 from mongodb import MongoDBClient
-from utils import get_timestamp_micro
 
 
 # 파라미터 초기화
-airflow_client      = Client(None, None)
-mongo_client        = MongoDBClient()
-crawler             = YoutubeCrawler()
+mongo_client = MongoDBClient()
+crawler = YoutubeCrawler()
+
+# 댓글 할당량 설정 (Airflow Variable에서 가져오기, 기본값: 1000)
+def get_comment_quota():
+    """Airflow Variable에서 COMMENT_QUOTA 가져오기 (기본값: 1000)"""
+    try:
+        quota = Variable.get('COMMENT_QUOTA', default_var=1000)
+        return int(quota)
+    except Exception:
+        return 1000
 
 
 # 로직 함수 정의
 def extract_article_ids(**context):
-    # 파라미터 추출
+    """인기 동영상 ID 추출"""
     execution_date = context['execution_date']
     
-    # 데이터 추출
     article_ids = crawler.scrap_array_id(created_at=execution_date)
-    if not article_ids: return []
+    if not article_ids:
+        return []
     
-    return [{'article_id': article_id} for article_id in article_ids]
+    return article_ids
 
 
-def trigger_single_detail_dag(**context):
-    # 파라미터 추출
-    article_id = context.get('article_id')
-    if not article_id: raise ValueError("article_id is required")
+def extract_and_save_details(**context):
+    """댓글 크롤링 및 MongoDB 저장 (할당량 제한)"""
+    # XCom에서 article_ids 가져오기
+    ti = context['ti']
+    article_ids = ti.xcom_pull(task_ids='extract_article_ids')
     
-    try:
-        # DAG 트리거
-        timestamp_micro = get_timestamp_micro()
-        run_id = f'triggered__{article_id}__{timestamp_micro}'
+    if not article_ids:
+        print("추출된 article_ids가 없습니다.")
+        return
+    
+    # 할당량 가져오기
+    comment_quota = get_comment_quota()
+    print(f"댓글 할당량: {comment_quota}개")
+    
+    total_comments = 0
+    processed_videos = 0
+    
+    # 각 영상의 댓글 크롤링
+    for article_id in article_ids:
+        # 할당량 도달 시 중단
+        if total_comments >= comment_quota:
+            print(f"할당량 도달: {total_comments}개 댓글 수집 완료. 크롤링 중단.")
+            break
         
-        airflow_client.trigger_dag(
-            dag_id='youtube_article_detail',
-            conf={'article_id': article_id},
-            run_id=run_id,
+        # 댓글 크롤링
+        article_data = crawler.scrap_article_data(article_id=article_id)
+        
+        if not article_data:
+            print(f"영상 {article_id}: 댓글 없음 또는 오류 발생")
+            continue
+        
+        # MongoDB 저장 (upsert)
+        upsert_result = mongo_client.upsert_many(
+            collection_name='raw_articles',
+            documents=article_data,
+            filter_keys=['src_pk', 'src_id', 'comment_id']
         )
-        return f"Successfully triggered for {article_id}"
         
-    except Exception as e:
-        # 예외 처리
-        error_str = str(e).lower()
-        if "duplicate key" in error_str:
-            return f"DAG run already exists for {article_id} (duplicate key)"
-        if "already exists" in error_str:
-            return f"DAG run already exists for {article_id} (already exists)"
-        if "unique constraint" in error_str:
-            return f"DAG run already exists for {article_id} (unique constraint)"
-        traceback.print_exc()
-        raise
-
-
-def extract_and_save_article_detail(**context):
-    # 파라미터 추출
-    dag_run = context.get('dag_run')
-    if dag_run and dag_run.conf:
-        article_id = dag_run.conf.get('article_id')
-    else:
-        article_id = context['ti'].xcom_pull(key='article_id')
+        # 실제로 새로 insert된 댓글 개수 사용
+        inserted_count = upsert_result.get('upserted_count', 0)
+        total_comments += inserted_count
+        processed_videos += 1
+        
+        print(f"영상 {article_id}: {inserted_count}개 댓글 새로 저장 (누적: {total_comments}/{comment_quota})")
     
-    if not article_id: raise ValueError("article_id is required")
-    
-    # 데이터 추출
-    article_data = crawler.scrap_article_data(article_id=article_id)
-    if not article_data: return
-    
-    # MongoDB 저장
-    mongo_client.upsert_many(
-        collection_name='raw_articles',
-        documents=article_data,
-        filter_keys=['src_pk', 'src_id', 'comment_id']
-    )
-    
-    return article_data
+    print(f"크롤링 완료: {processed_videos}개 영상 처리, 총 {total_comments}개 댓글 수집")
+    return {
+        'processed_videos': processed_videos,
+        'total_comments': total_comments
+    }
 
 
 # DAG 설정
-default_args_list = {
+default_args = {
     'owner': 'trendgetter',
     'depends_on_past': False,
     'email_on_failure': False,
     'email_on_retry': False,
-    'retries': 1,
+    'retries': 0,  # retry 비활성화 (사용자가 직접 판단하여 트리거)
     'retry_delay': timedelta(minutes=5),
 }
 
-youtube_list_dag = DAG(
-    'youtube_article_list',
-    default_args=default_args_list,
-    description='YouTube 목록에서 article_id 추출 및 상세 DAG 트리거',
+youtube_crawling_dag = DAG(
+    'youtube_crawling',
+    default_args=default_args,
+    description='YouTube 인기 동영상 댓글 크롤링 및 MongoDB 저장 (할당량 제한)',
     schedule_interval=timedelta(days=1),
     start_date=days_ago(1),
     catchup=False,
-    tags=['trendgetter', 'youtube', 'crawler', 'list'],
-)
-
-default_args_detail = {
-    'owner': 'trendgetter',
-    'depends_on_past': False,
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'retries': 2,
-    'retry_delay': timedelta(minutes=5),
-}
-
-youtube_detail_dag = DAG(
-    'youtube_article_detail',
-    default_args=default_args_detail,
-    description='YouTube 상세 페이지 크롤링 및 MongoDB 저장',
-    schedule_interval=None,
-    start_date=days_ago(1),
-    catchup=False,
-    tags=['trendgetter', 'youtube', 'crawler', 'detail'],
+    tags=['trendgetter', 'youtube', 'crawler', 'list', 'detail'],
 )
 
 
@@ -127,26 +112,15 @@ youtube_detail_dag = DAG(
 extract_ids_task = PythonOperator(
     task_id='extract_article_ids',
     python_callable=extract_article_ids,
-    dag=youtube_list_dag,
-)
-
-trigger_tasks = PythonOperator.partial(
-    task_id='trigger_detail_dag',
-    python_callable=trigger_single_detail_dag,
-    dag=youtube_list_dag,
-).expand(
-    op_kwargs=extract_ids_task.output
+    dag=youtube_crawling_dag,
 )
 
 extract_detail_task = PythonOperator(
-    task_id='extract_and_save_article_detail',
-    python_callable=extract_and_save_article_detail,
-    dag=youtube_detail_dag,
+    task_id='extract_and_save_details',
+    python_callable=extract_and_save_details,
+    dag=youtube_crawling_dag,
 )
 
 
 # 의존성 설정
-#   목록 추출 >> 상세 DAG 트리거
-extract_ids_task >> trigger_tasks  # pyright: ignore[reportUnusedExpression]
-#   상세 크롤링 >> 저장
-extract_detail_task  # pyright: ignore[reportUnusedExpression]
+extract_ids_task >> extract_detail_task  # pyright: ignore[reportUnusedExpression]
