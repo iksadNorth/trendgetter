@@ -1,7 +1,9 @@
 import os
 from datetime import datetime
 from typing import List, Dict, Any, Optional
+from dotenv import load_dotenv
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from src.utils import normalize_created_at
 
 
@@ -12,6 +14,7 @@ class YoutubeCrawler():
         Args:
             api_key: YouTube Data API 키 (None이면 YOUTUBE_API_KEY 환경 변수 사용)
         """
+        load_dotenv()  # .env 파일 로드
         self.api_key = api_key or os.getenv('YOUTUBE_API_KEY')
         if not self.api_key:
             raise ValueError("YOUTUBE_API_KEY 환경 변수가 설정되지 않았습니다.")
@@ -40,7 +43,7 @@ class YoutubeCrawler():
             return video_ids[:10]  # 최대 10개만 반환
             
         except Exception as e:
-            print(f"예상치 못한 오류 (trending videos): {e}")
+            print(f"trending videos 오류: {e}")
             return []
     
     def scrap_article_data(self, article_id: str) -> List[Dict[str, Any]]:
@@ -53,13 +56,11 @@ class YoutubeCrawler():
             댓글 데이터 리스트 (스키마에 맞게 변환됨)
         """
         raw_data = []
+        next_page_token = None
+        max_results = 100
         
-        try:
-            # 댓글 스레드 가져오기 (최대 100개)
-            next_page_token = None
-            max_results = 100
-            
-            while len(raw_data) < max_results:
+        while len(raw_data) < max_results:
+            try:
                 request = self.youtube.commentThreads().list(
                     part='snippet,replies',
                     videoId=article_id,
@@ -100,10 +101,29 @@ class YoutubeCrawler():
                 # 다음 페이지 토큰 확인
                 next_page_token = response.get('nextPageToken')
                 if not next_page_token: break
-        
-        except Exception as e:
-            print(f"예상치 못한 오류 (comments): {e}")
-            return []
+            
+            except HttpError as e:
+                if e.resp.status == 403:
+                    error_str = str(e).lower()
+                    is_comments_disabled = 'commentsdisabled' in error_str or 'disabled comments' in error_str
+                    if is_comments_disabled:
+                        return []
+                    else:
+                        print(f"comments 오류 (403): {e}")
+                        return []
+                elif e.resp.status == 404:
+                    return []
+                else:
+                    print(f"comments 오류 ({e.resp.status}): {e}")
+                    if not next_page_token:
+                        break
+                    continue
+            
+            except Exception as e:
+                print(f"comments 오류: {e}")
+                if not next_page_token:
+                    break
+                continue
         
         # created_at 정규화
         for doc in raw_data:

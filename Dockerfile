@@ -14,6 +14,7 @@ WORKDIR /opt/airflow
 
 # 프로젝트 파일 복사
 COPY pyproject.toml ./
+COPY .env ./.env
 COPY src/ ./src/
 
 # airflow 사용자 생성 (기존 Airflow 이미지와 동일한 UID/GID)

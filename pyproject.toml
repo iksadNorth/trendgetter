@@ -17,6 +17,7 @@ dependencies = [
     "pymongo>=4.15.5",
     "kiwipiepy>=0.20.0",
     "google-api-python-client>=2.100.0",
+    "python-dotenv>=1.0.0",
 ]
 
 [build-system]
