@@ -1,13 +1,20 @@
 #!/bin/bash
 
-# Namespace 적용
-kubectl delete namespace trendgetter || true
+# Namespace 생성 (없으면 생성)
+kubectl apply -f deploy/namespace.yaml
+
+# Superset을 제외한 모든 Pod 삭제 (재시작을 위해)
+echo "Superset을 제외한 Pod 삭제 중..."
+kubectl delete pod -n trendgetter -l app=postgres 2>/dev/null || true
+kubectl delete pod -n trendgetter -l app=mongodb 2>/dev/null || true
+kubectl delete pod -n trendgetter -l app=redis 2>/dev/null || true
+kubectl delete pod -n trendgetter -l app=airflow-scheduler 2>/dev/null || true
+kubectl delete pod -n trendgetter -l app=airflow-webserver 2>/dev/null || true
+kubectl delete pod -n trendgetter -l app=airflow-worker 2>/dev/null || true
 
 # PV/PVC 정리 (Released 상태 방지)
 kubectl delete pvc --all -n trendgetter 2>/dev/null || true
 kubectl delete pv --all 2>/dev/null || true
-
-kubectl apply -f deploy/namespace.yaml
 
 # .env 파일에서 ConfigMap과 Secret 생성
 kubectl create configmap app-env --from-env-file=.env -n trendgetter --dry-run=client -o yaml | kubectl apply -f -
