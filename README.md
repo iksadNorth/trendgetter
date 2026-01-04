@@ -9,9 +9,9 @@ TrendGetter는 3가지 부분으로 나뉩니다.
 
 - Extract: 각종 SNS 웹페이지, Youtube 댓글, 커뮤니티 댓글 등등의 대중이 만드는 텍스트 정보 수집
 
-- Transform: 각 데이터들을 통일된 스키마로 라벨링 및 데이터 품질 검사, Time-Windowed Temporal TF-IDF 스코어 계산.
+- Transform: 각 데이터들의 스키마 통일 및 불용어 제거, 토큰화, Time Bucketed TF-IDF 스코어 계산.
 
-- Load: Kibana를 활용해 데이터 시각화 구현. 이를 위해 Elasticsearch에 데이터 적재.
+- Load: Superset 활용해 데이터 시각화 구현. 이를 위해 PostgreSQL에 데이터 적재.
 
 ![PipeLine 그림](documents/cartoon-pipeline.png)
 
@@ -34,11 +34,34 @@ TrendGetter는 3가지 부분으로 나뉩니다.
 
 ![demo](documents/demo-airflow-dagrun.gif)
 
+### 과정 2: xxx_article_list Dag들에 의해 텍스트 데이터 적재
+
+![demo](documents/demo-article-list-load.gif)
+
+### 과정 3: tokenization Dag들에 의해 불용어 제거 및 토큰 데이터 적재
+
+![demo](documents/demo-tokenization-transform.gif)
+
+### 과정 3: token_aggregation Dag들에 의해 스코어 계산 및 적재
+
+![demo](documents/demo-token-score-transform.gif)
+
+### 과정 4: token_aggregation Dag들에 의해 PostgreSQL로 데이터 이관
+
+![demo](documents/demo-mig-to-pg.gif)
+
+### 과정 5: Superset를 활용해 데이터 시각화
+
+![demo](documents/demo-superset-data-visualizing.gif)
+
 ## 그래서 의도한 대로 성과가 나왔나요?
 
 1. **파이프라인 재시도 시간**
-    - **Without Airflow vs With Airflow**: 전자(약 ??분)을 후자(약 ??분)로 단축
     - 로그확인 및 재시작 등 모든 과정이 자동화됨
+    - 로그 수집 툴[ex) ELK, Prometheus, Datadog]를 도입하지 않아도 됨.
+
+2. **Backfill 수행 속도 향상**
+    - 실행시간 기준으로 backfill을 수행하는 명령어를 Airflow 차원에서 제공함.
 
 ## 프로젝트 구조
 ```
