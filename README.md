@@ -3,7 +3,7 @@ TrendSetter들이 만드는 데이터를 수집하는 프로그램. TrendGetter
 
 ![TrendGetter 그림](documents/cartoon-trendgetter.png)
 
-*그림 0: SNS들이 던지는 데이터 받는 거미팔 포수*
+*그림 0: 데이터들로 퍼즐을 맞추는 거미팔 연구원*
 
 TrendGetter는 3가지 부분으로 나뉩니다.
 

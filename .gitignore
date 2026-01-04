@@ -24,6 +24,6 @@ secrets/
 mongodb-data/
 postgres-data/
 superset-data/
-documents/
 *.log
 logs/
+**/.DS_Store
