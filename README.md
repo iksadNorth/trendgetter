@@ -43,6 +43,36 @@ TrendGetter는 3가지 부분으로 나뉩니다.
 ## 프로젝트 구조
 ```
 trendgetter/
-├── example.py
-└── scripts/
+├── dags/                     # Airflow DAG 정의 파일들
+│   ├── community_crawling_dag.py
+│   ├── instagram_crawling_dag.py
+│   ├── tfidf_dag.py
+│   ├── tokenization_dag.py
+│   └── youtube_crawling_dag.py
+├── deploy/                   # Kubernetes 배포 설정 파일들
+│   ├── airflow-scheduler.yaml
+│   ├── airflow-webserver.yaml
+│   ├── airflow-worker.yaml
+│   ├── apply.sh
+│   ├── backfill.sh
+│   ├── commit_pg_schema.sh
+│   ├── mongodb.yaml
+│   ├── postgres.yaml
+│   ├── redis.yaml
+│   ├── superset.yaml
+│   └── ...
+├── src/                      # 소스 코드
+│   ├── alembic/              # Alembic 마이그레이션 파일들
+│   ├── api_client.py
+│   ├── crawler.py
+│   ├── model.py
+│   ├── mongodb.py
+│   ├── postgresql.py
+│   ├── quality_assurance.py
+│   ├── statistics.py
+│   └── utils.py
+├── plugins/                  # Airflow 플러그인
+├── Dockerfile                # Airflow 이미지 빌드 파일
+├── pyproject.toml            # 프로젝트 의존성 및 설정
+└── main.py
 ```
