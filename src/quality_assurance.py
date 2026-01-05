@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Set, Optional
 from kiwipiepy import Kiwi
+from bs4 import BeautifulSoup
 
 class QualityAssurance(ABC):
     """데이터 품질 검사 추상 클래스.
@@ -130,6 +131,29 @@ class KiwiTokenizerQualityAssurance(QualityAssurance):
                     0x3130 <= code <= 0x318F):   # 호환 자모
                 return False
         return True
+    
+    def remove_html_tags(self, text: str) -> str:
+        """HTML 태그를 제거하고 텍스트만 추출
+        
+        BeautifulSoup을 사용하여 HTML 태그를 제거하되,
+        영어 및 기타 텍스트는 보존합니다.
+        
+        Args:
+            text: HTML 태그가 포함될 수 있는 텍스트
+            
+        Returns:
+            HTML 태그가 제거된 텍스트
+        """
+        if not text:
+            return ""
+        
+        # BeautifulSoup을 사용하여 HTML 태그 제거
+        soup = BeautifulSoup(text, 'html.parser')
+        # get_text()로 모든 태그를 제거하고 텍스트만 추출
+        # strip=True로 앞뒤 공백 제거, separator=' '로 태그 사이 공백 처리
+        cleaned_text = soup.get_text(separator=' ', strip=True)
+        
+        return cleaned_text
 
 
 if __name__ == '__main__':
@@ -141,7 +165,40 @@ if __name__ == '__main__':
     # 테스트 인스턴스 생성
     qa = KiwiTokenizerQualityAssurance(min_length=2)
     
-    # 테스트 케이스
+    # HTML 태그 제거 테스트
+    print("\n" + "=" * 60)
+    print("HTML 태그 제거 테스트")
+    print("=" * 60)
+    
+    html_test_cases = [
+        "<p>안녕하세요 <strong>오늘</strong> 날씨가 좋네요</p>",
+        "<div>이것은 <span>테스트</span> 문장입니다.</div>",
+        "<a href='#'>링크 텍스트</a>와 일반 텍스트",
+        "Python <code>프로그래밍</code>과 Java 개발",
+        "<script>alert('test')</script>안녕하세요",
+        "<style>.test { color: red; }</style>테스트",
+        "일반 텍스트만 있는 경우",
+        "<br/>줄바꿈 태그<br/>테스트",
+        "<h1>제목</h1><p>본문</p>",
+        "Mixed <b>English</b> and 한글 텍스트",
+        "",
+        "   ",
+    ]
+    
+    for i, test_html in enumerate(html_test_cases, 1):
+        print(f"\n[HTML 태그 제거 테스트 {i}]")
+        print(f"입력: {repr(test_html)}")
+        cleaned = qa.remove_html_tags(test_html)
+        print(f"태그 제거 후: {repr(cleaned)}")
+        tokens = qa.tokenize(cleaned)
+        print(f"토큰화 결과: {tokens}")
+        print(f"토큰 수: {len(tokens)}")
+    
+    # 일반 토큰화 테스트
+    print("\n" + "=" * 60)
+    print("일반 토큰화 테스트")
+    print("=" * 60)
+    
     test_cases = [
         "안녕하세요 오늘 날씨가 정말 좋네요",
         "이것은 테스트 문장입니다. 불용어가 제거되어야 합니다.",

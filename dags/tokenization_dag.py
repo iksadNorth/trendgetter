@@ -82,6 +82,9 @@ def tokenize_and_save(**context):
     if not metadata_doc: return {'metadata_id': None, 'token_count': 0}
     metadata_id = str(metadata_doc['_id'])
     
+    # HTML 태그 제거
+    text = qa.remove_html_tags(text)
+    
     # 토큰화
     tokens = qa.tokenize(text)
     if not tokens: return {'metadata_id': None, 'token_count': 0}
