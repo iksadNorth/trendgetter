@@ -30,17 +30,15 @@ TrendGetter는 3가지 부분으로 나뉩니다.
 
 ## 이거 어떻게 사용하는 거에요?
 
-### 과정 1: Airflow Webserver를 이용한 Dag 실행
-
-![demo](documents/demo-airflow-dagrun.gif)
-
-### 과정 2: xxx_article_list Dag들에 의해 텍스트 데이터 적재
+### 과정 1: xxx_article_list Dag들에 의해 텍스트 데이터 적재
 
 ![demo](documents/demo-article-list-load.gif)
 
-### 과정 3: tokenization Dag들에 의해 불용어 제거 및 토큰 데이터 적재
+### 과정 2: tokenization Dag들에 의해 불용어 제거 및 토큰 데이터 적재
 
-![demo](documents/demo-tokenization-transform.gif)
+![demo](documents/demo-tokenization-transform-1.gif)
+
+![demo](documents/demo-tokenization-transform-2.gif)
 
 ### 과정 3: token_aggregation Dag들에 의해 스코어 계산 및 적재
 
