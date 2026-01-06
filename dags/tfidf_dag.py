@@ -7,7 +7,7 @@ from airflow.utils.dates import days_ago
 from mongodb import MongoDBClient
 from src.statistics import TimeWindowedTemporalTFIDF
 from src.postgresql import PostgreSQLClient
-from utils import get_week_range, normalize_datetime, get_week_bucket_start
+from utils import get_day_range, normalize_datetime, get_day_bucket_start
 
 
 # 파라미터 초기화
@@ -35,8 +35,8 @@ def aggregate_daily_token_counts(**context):
     if not daily_counts:
         return {'token_count': 0, 'date': target_date.isoformat()}
     
-    # 주간 버킷 시작점 계산
-    bucket_start = get_week_bucket_start(target_date)
+    # 일일 버킷 시작점 계산
+    bucket_start = get_day_bucket_start(target_date)
     
     # count_keyword 컬렉션에 저장할 문서 생성
     documents = []
@@ -76,8 +76,8 @@ def calculate_tfidf_scores(**context):
     else:
         execution_date = normalize_datetime(execution_date)
     
-    # 해당 주의 월요일부터 execution_date까지의 범위 계산
-    start_time, end_time = get_week_range(execution_date)
+    # 해당 날짜의 00:00:00부터 23:59:59까지의 범위 계산
+    start_time, end_time = get_day_range(execution_date)
     
     # TF-IDF 스코어 계산 (TFIDFScore 모델 리스트 반환)
     tfidf_score_models = tfidf_calculator.calculate(start_date=start_time, end_date=end_time)
@@ -116,8 +116,8 @@ def migrate_tfidf_to_postgres(**context):
     else:
         execution_date = normalize_datetime(execution_date)
     
-    # 해당 주의 월요일부터 execution_date까지의 범위 계산
-    start_time, end_time = get_week_range(execution_date)
+    # 해당 날짜의 00:00:00부터 23:59:59까지의 범위 계산
+    start_time, end_time = get_day_range(execution_date)
     
     # MongoDB에서 tfidf_scores 조회
     tfidf_scores = mongo_client.find_by_time_range(
@@ -161,7 +161,7 @@ default_args = {
 tfidf_dag = DAG(
     'token_aggregation',
     default_args=default_args,
-    description='일일 토큰 집계 및 주간 TF-IDF 스코어 계산',
+    description='일일 토큰 집계 및 일일 TF-IDF 스코어 계산',
     schedule_interval=timedelta(days=1),
     start_date=days_ago(7),
     catchup=True,

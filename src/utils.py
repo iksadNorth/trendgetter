@@ -100,6 +100,40 @@ def get_week_bucket_start(dt: datetime) -> datetime:
     days_to_monday = dt.weekday()
     return (dt - timedelta(days=days_to_monday)).replace(hour=0, minute=0, second=0, microsecond=0)
 
+def get_day_range(execution_date: datetime) -> tuple[datetime, datetime]:
+    """해당 날짜의 00:00:00부터 23:59:59까지의 범위를 반환
+    
+    Args:
+        execution_date: 기준 날짜
+        
+    Returns:
+        (start_time, end_time) 튜플
+        - start_time: 해당 날짜의 00:00:00
+        - end_time: 해당 날짜의 23:59:59.999999
+    """
+    # Proxy 객체나 문자열을 실제 datetime으로 변환
+    execution_date = normalize_datetime(execution_date)
+    
+    # 해당 날짜의 00:00:00 계산
+    start_time = execution_date.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # 해당 날짜의 23:59:59.999999 계산
+    end_time = execution_date.replace(hour=23, minute=59, second=59, microsecond=999999)
+    
+    return start_time, end_time
+
+def get_day_bucket_start(dt: datetime) -> datetime:
+    """해당 datetime이 속한 날짜의 00:00:00 반환 (일일 버킷 시작점)
+    
+    Args:
+        dt: 기준 datetime 객체
+        
+    Returns:
+        해당 날짜의 00:00:00
+    """
+    dt = normalize_datetime(dt)
+    return dt.replace(hour=0, minute=0, second=0, microsecond=0)
+
 def get_all_week_buckets(tokens: List[Dict[str, Any]]) -> Set[datetime]:
     """토큰 리스트에서 고유한 시간 버킷 시작점 집합 반환
     
