@@ -98,7 +98,7 @@ community_list_dag = DAG(
     default_args=default_args_list,
     description='커뮤니티 목록에서 article_id 추출 및 상세 DAG 트리거',
     schedule_interval=timedelta(days=1),
-    start_date=days_ago(1),
+    start_date=datetime(2025, 1, 1),
     catchup=False,
     tags=['trendgetter', 'community', 'crawler', 'list'],
 )
@@ -117,7 +117,7 @@ community_detail_dag = DAG(
     default_args=default_args_detail,
     description='커뮤니티 상세 페이지 크롤링 및 MongoDB 저장',
     schedule_interval=None,
-    start_date=days_ago(1),
+    start_date=datetime(2025, 1, 1),
     catchup=False,
     tags=['trendgetter', 'community', 'crawler', 'detail'],
 )

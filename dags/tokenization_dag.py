@@ -6,7 +6,7 @@ from airflow.utils.dates import days_ago
 
 from mongodb import MongoDBClient
 from quality_assurance import KiwiTokenizerQualityAssurance
-from utils import get_week_range, normalize_datetime
+from utils import get_day_range, normalize_datetime
 
 
 # 파라미터 초기화
@@ -18,7 +18,7 @@ qa = KiwiTokenizerQualityAssurance()
 def extract_raw_articles(**context):
     """시간 범위 계산 및 반환 (XCom 크기 제한 회피)
     
-    기본값: execution_date가 속한 주의 월요일부터 execution_date까지
+    기본값: execution_date가 속한 날짜의 00:00:00부터 23:59:59까지
     XCom 크기 제한을 피하기 위해 시간 범위만 반환
     """
     # 파라미터 추출 및 정규화
@@ -28,8 +28,8 @@ def extract_raw_articles(**context):
     else:
         execution_date = normalize_datetime(execution_date)
     
-    # 해당 주의 월요일부터 execution_date까지의 범위 계산
-    start_time, end_time = get_week_range(execution_date)
+    # 해당 날짜의 00:00:00부터 23:59:59까지의 범위 계산
+    start_time, end_time = get_day_range(execution_date)
     
     # 시간 범위만 반환 (XCom 크기 제한 회피)
     return {
@@ -133,15 +133,15 @@ default_args = {
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 2,
-    'retry_delay': timedelta(minutes=5),
+    'retry_delay': timedelta(minutes=1),
 }
 
 tokenization_dag = DAG(
     'tokenization',
     default_args=default_args,
-    description='raw_articles 컬렉션의 댓글을 토큰화하여 metadata_articles와 tokens 컬렉션에 분리 저장 (기본값: 1주일 단위)',
-    schedule_interval=timedelta(days=7),
-    start_date=days_ago(1),
+    description='raw_articles 컬렉션의 댓글을 토큰화하여 metadata_articles와 tokens 컬렉션에 분리 저장 (기본값: 1일 단위)',
+    schedule_interval=timedelta(days=1),
+    start_date=datetime(2025, 1, 1),
     catchup=False,
     tags=['trendgetter', 'tokenization', 'nlp'],
 )

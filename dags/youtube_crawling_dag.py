@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.models import Variable
@@ -94,7 +94,7 @@ default_args = {
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 0,  # retry 비활성화 (사용자가 직접 판단하여 트리거)
-    'retry_delay': timedelta(minutes=5),
+    'retry_delay': timedelta(minutes=1),
 }
 
 youtube_crawling_dag = DAG(
@@ -102,7 +102,7 @@ youtube_crawling_dag = DAG(
     default_args=default_args,
     description='YouTube 인기 동영상 댓글 크롤링 및 MongoDB 저장 (할당량 제한)',
     schedule_interval=timedelta(days=1),
-    start_date=days_ago(1),
+    start_date=datetime(2025, 1, 1),
     catchup=False,
     tags=['trendgetter', 'youtube', 'crawler', 'list', 'detail'],
 )

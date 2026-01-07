@@ -155,7 +155,7 @@ default_args = {
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 2,
-    'retry_delay': timedelta(minutes=5),
+    'retry_delay': timedelta(minutes=1),
 }
 
 tfidf_dag = DAG(
@@ -163,7 +163,7 @@ tfidf_dag = DAG(
     default_args=default_args,
     description='일일 토큰 집계 및 일일 TF-IDF 스코어 계산',
     schedule_interval=timedelta(days=1),
-    start_date=days_ago(7),
+    start_date=datetime(2025, 1, 1),
     catchup=True,
     tags=['trendgetter', 'token', 'aggregation', 'tfidf', 'statistics', 'nlp'],
 )

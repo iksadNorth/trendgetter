@@ -90,7 +90,7 @@ default_args_list = {
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 1,
-    'retry_delay': timedelta(minutes=5),
+    'retry_delay': timedelta(minutes=1),
 }
 
 instagram_list_dag = DAG(
@@ -98,7 +98,7 @@ instagram_list_dag = DAG(
     default_args=default_args_list,
     description='Instagram 목록에서 article_id 추출 및 상세 DAG 트리거',
     schedule_interval=timedelta(days=1),
-    start_date=days_ago(1),
+    start_date=datetime(2025, 1, 1),
     catchup=False,
     tags=['trendgetter', 'instagram', 'crawler', 'list'],
 )
@@ -109,7 +109,7 @@ default_args_detail = {
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 2,
-    'retry_delay': timedelta(minutes=5),
+    'retry_delay': timedelta(minutes=1),
 }
 
 instagram_detail_dag = DAG(
@@ -117,7 +117,7 @@ instagram_detail_dag = DAG(
     default_args=default_args_detail,
     description='Instagram 상세 페이지 크롤링 및 MongoDB 저장',
     schedule_interval=None,
-    start_date=days_ago(1),
+    start_date=datetime(2025, 1, 1),
     catchup=False,
     tags=['trendgetter', 'instagram', 'crawler', 'detail'],
 )
