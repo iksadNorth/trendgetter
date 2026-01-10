@@ -50,7 +50,7 @@ TrendGetter는 3가지 부분으로 나뉩니다.
 
 ### 과정 5: Superset를 활용해 데이터 시각화
 
-![demo](documents/demo-superset-data-visualizing.gif)
+![demo](documents/demo-superset-data-visualizing.png)
 
 ## 그래서 의도한 대로 성과가 나왔나요?
 
