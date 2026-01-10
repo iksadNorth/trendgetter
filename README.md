@@ -42,11 +42,12 @@ TrendGetter는 3가지 부분으로 나뉩니다.
 
 ### 과정 3: token_aggregation Dag들에 의해 스코어 계산 및 적재
 
-![demo](documents/demo-token-score-transform.gif)
+![demo](documents/demo-token-score-transform-1.png)
+![demo](documents/demo-token-score-transform-2.png)
 
 ### 과정 4: token_aggregation Dag들에 의해 PostgreSQL로 데이터 이관
 
-![demo](documents/demo-mig-to-pg.gif)
+![demo](documents/demo-mig-to-pg.png)
 
 ### 과정 5: Superset를 활용해 데이터 시각화
 
